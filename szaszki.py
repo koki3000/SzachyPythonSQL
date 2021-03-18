@@ -18,15 +18,17 @@ class pion(bierka):
     def ruch(self):
         print("Ktora bierke chcesz ruszyc?")
         start = input()
-        pole = db.execute("SELECT " + start[slice(1)] +" FROM szachownica where id=:i;",{"i": start[slice(1,2)]}).fetchall()
+        pole = db.execute("SELECT " + start[slice(1)] +" FROM szachownica where id=:i;",{"i": start[slice(1,2)]}).fetchone()
         x = (ord(start[slice(1)])-1)%8
         y = int(start[slice(1,2)])
-        wspolzedne = (y-1)*8+x
-        szachownica [wspolzedne+8] = "x"
-        szachownica [wspolzedne+16] = "x"
-        db.execute("update szachownica set " + start[slice(1)] +"='x' where id=:i OR id=:j;",{"i": y+1, "j": y+2})
-        if (pole[0].a == ''):
-            print (pole)
+
+        if ('Pion' in pole[0]):
+            wspolzedne = (y-1)*8+x
+            szachownica [wspolzedne+8] = "x"
+            szachownica [wspolzedne+16] = "x"
+            db.execute("update szachownica set " + start[slice(1)] +"='x' where id=:i OR id=:j;",{"i": y+1, "j": y+2})
+        else:
+            print ("Na tym polu nie ma piona")
 
         """
         db.execute("update szachownica set " + start[slice(1)] +"='' where id=:i;",{"i": start[slice(1,2)]})
@@ -86,13 +88,5 @@ if __name__ == "__main__":
 
 pion1 = pion(bierki[8])
 pion1.ruch()
-"""
-print ("podaj pole")
-a = input()
 
-x = (ord(a[slice(1)])-1)%8
-y = int(a[slice(1,2)])
-wspolzedne = (y-1)*8+x
-print (f"twoja bierka to {szachownica[wspolzedne]}")
-"""
 
