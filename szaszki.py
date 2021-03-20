@@ -13,31 +13,25 @@ def wybor():
         pole = db.execute("SELECT " + start[slice(1)] +" FROM szachownica where id=:i;",{"i": start[slice(1,2)]}).fetchone()
         x = (ord(start[slice(1)])-1)%8
         y = int(start[slice(1,2)])
-
-        if ('Pion' in pole[0]):
-            if ('c' in pole[0]):
-                wspolzedne = (y-1)*8+x
-                szachownica [wspolzedne+8] = "x"
-                szachownica [wspolzedne+16] = "x"
-                db.execute("update szachownica set " + start[slice(1)] +"='x' where id=:i OR id=:j;",{"i": y+1, "j": y+2})
-            else:
-                wspolzedne = (y-1)*8+x
-                szachownica [wspolzedne-8] = "x"
-                szachownica [wspolzedne-16] = "x"
-                db.execute("update szachownica set " + start[slice(1)] +"='x' where id=:i OR id=:j;",{"i": y-1, "j": y-2})
-        else:
-            print ("Na tym polu nie ma piona")
-        db.commit()
-
+        wspolrzedneStart = (y-1)*8+x
+        szachownica[wspolrzedneStart].ruch(x,y,start)
+        
         print("Dokad chcesz ruszyc?")
         koniec = input()
+        x = (ord(koniec[slice(1)])-1)%8
+        y = int(koniec[slice(1,2)])
+        wspolrzedneKoniec = (y-1)*8+x
         pole = db.execute("SELECT " + koniec[slice(1)] +" FROM szachownica where id=:i;",{"i": koniec[slice(1,2)]}).fetchone()
-        if (pole[0] == 'x'):                                                                                                       # wymaga zmian
+        if ('x' in pole[0]):                                                                                                       # wymaga zmian
             db.execute("update szachownica set " + start[slice(1)] +"='' where id=:i;",{"i": start[slice(1,2)]})
-            db.execute("update szachownica set " + koniec[slice(1)] +"=:bierka where id=:i;",{"i": koniec[slice(1,2)],"bierka": szachownica[wspolzedne].tekst})
+            db.execute("update szachownica set " + koniec[slice(1)] +"=:bierka where id=:i;",{"i": koniec[slice(1,2)],"bierka": szachownica[wspolrzedneStart].tekst})
             db.execute("update szachownica set " + start[slice(1)] +"='' where " + start[slice(1)] +"='x';",{"i": koniec[slice(1,2)]})
+            
+            bufor = szachownica[wspolrzedneStart]
+            szachownica[wspolrzedneStart] = pustePole()
+            szachownica[wspolrzedneKoniec] = bufor
         else:
-            print ("pole jest zajete")
+            print ("pole nieprawidlowe")
 
         db.commit()
 
@@ -47,15 +41,13 @@ class bierka:
         self.kolor = kolor
         self.tekst = kolor+typ
         
-    def ruch(self):
+    def ruch(self,x,y):
         pass
 
 class wieza(bierka):
     def __init__ (self,kolor):
         super().__init__(typ="Wieza", kolor = kolor)
 
-    def ruch(self):
-        pass
 
 class konik(bierka):
     def __init__ (self,kolor):
@@ -64,9 +56,9 @@ class konik(bierka):
     def ruch(self):
         pass
 
-class laufer(bierka):
+class goniec(bierka):
     def __init__ (self,kolor):
-        super().__init__(typ="Laufer", kolor = kolor)
+        super().__init__(typ="Goniec", kolor = kolor)
         
     def ruch(self):
         pass
@@ -89,13 +81,26 @@ class pion(bierka):
     def __init__ (self,kolor):
         super().__init__(typ="Pion", kolor = kolor)
     
-    def ruch(self):
-        pass
+    def ruch(self,x,y,start):
+        print (self.tekst)
+        if (self.kolor == "c"):
+            for i in range (2):
+                if (szachownica[(y+i)*8+x].tekst == ""):
+                    db.execute("update szachownica set " + start[slice(1)] +"='x' where id=:i;",{"i": y+i+1})
+        elif (self.kolor == "b"):
+            for i in range (2):
+                if (szachownica[(y-2-i)*8+x].tekst == ""):
+                    db.execute("update szachownica set " + start[slice(1)] +"='x' where id=:i;",{"i": y-i-1})
+        db.commit()
+
+class pustePole:
+    def __init__(self):
+        self.tekst = ""
 
 czarny = "c"
 bialy = "b"
-czarneFigury = [wieza(czarny), konik(czarny), laufer(czarny), hetman(czarny), krol(czarny), laufer(czarny), konik(czarny), wieza(czarny)]
-bialeFigury = [wieza(bialy), konik(bialy), laufer(bialy), hetman(bialy), krol(bialy), laufer(bialy), konik(bialy), wieza(bialy)]
+czarneFigury = [wieza(czarny), konik(czarny), goniec(czarny), hetman(czarny), krol(czarny), goniec(czarny), konik(czarny), wieza(czarny)]
+bialeFigury = [wieza(bialy), konik(bialy), goniec(bialy), hetman(bialy), krol(bialy), goniec(bialy), konik(bialy), wieza(bialy)]
 szachownica = []
 for j in range (4):
     for i in range (16):
@@ -105,31 +110,41 @@ for j in range (4):
             elif (j==3):
                 szachownica.append(pion("b"))
             else:
-                szachownica.append("")
+                szachownica.append(pustePole())
         if (i >= 8):
             if (j==0):
                 szachownica.append(pion("c"))
             elif (j==3):
                 szachownica.append(bialeFigury[i%8])
             else:
-                szachownica.append("")
+                szachownica.append(pustePole())
 
 def main():
 
 
     for i in range(8):
-        if (i in (0,1,6,7)):
+        #if (i in (0,1,6,7)):
             db.execute("update szachownica set a=:a, b=:b, c=:c, d=:d, e=:e, f=:f, g=:g, h=:h where id=:i;",
             {"a": szachownica[8*i].tekst,"b": szachownica[8*i+1].tekst,"c": szachownica[8*i+2].tekst,"d": szachownica[8*i+3].tekst,
             "e": szachownica[8*i+4].tekst,"f": szachownica[8*i+5].tekst,"g": szachownica[8*i+6].tekst,"h": szachownica[8*i+7].tekst, "i": i+1})
+    """
         else:
             db.execute("update szachownica set a=:a, b=:b, c=:c, d=:d, e=:e, f=:f, g=:g, h=:h where id=:i;",
             {"a": szachownica[8*i],"b": szachownica[8*i+1],"c": szachownica[8*i+2],"d": szachownica[8*i+3],
             "e": szachownica[8*i+4],"f": szachownica[8*i+5],"g": szachownica[8*i+6],"h": szachownica[8*i+7], "i": i+1})
-
+    """
     print ("dodano")
     db.commit()
 if __name__ == "__main__":
     main()
-
+for i in range(8):
+    cos = []
+    for j in range(8):
+        cos.append(szachownica[(i)*8+j].tekst)
+    print (cos)
 wybor()
+for i in range(8):
+    cos = []
+    for j in range(8):
+        cos.append(szachownica[(i)*8+j].tekst)
+    print (cos)
