@@ -83,19 +83,38 @@ class pion(bierka):
     
     def ruch(self,x,y,start):
         print (self.tekst)
+        
         if (self.kolor == "c"):
-            for i in range (2):
-                if (szachownica[(y+i)*8+x].tekst == ""):
-                    db.execute("update szachownica set " + start[slice(1)] +"='x' where id=:i;",{"i": y+i+1})
+            if (y == 2):
+                for i in range (2):
+                    if (szachownica[(y+i)*8+x].tekst == ""):
+                        db.execute("update szachownica set " + start[slice(1)] +"='x' where id=:i;",{"i": y+i+1})
+            else:
+                if (szachownica[y*8+x].tekst == ""):
+                    db.execute("update szachownica set " + start[slice(1)] +"='x' where id=:i;",{"i": y+1})
+            if (szachownica[y*8+(x+1)].kolor == "b" and x < 7):
+                db.execute("update szachownica set " + chr(ord(start[slice(1)])+1) +"='" + ("x/" + szachownica[y*8+(x+1)].tekst) +"' where id=:i;",{"i": y+1})
+            if (szachownica[y*8+(x-1)].kolor == "b" and x > 0):
+                db.execute("update szachownica set " + chr(ord(start[slice(1)])-1) +"='" + ("x/" + szachownica[y*8+(x-1)].tekst) +"' where id=:i;",{"i": y+1})
+        
         elif (self.kolor == "b"):
-            for i in range (2):
-                if (szachownica[(y-2-i)*8+x].tekst == ""):
-                    db.execute("update szachownica set " + start[slice(1)] +"='x' where id=:i;",{"i": y-i-1})
+            if (y == 7):
+                for i in range (2):
+                    if (szachownica[(y-2-i)*8+x].tekst == ""):
+                        db.execute("update szachownica set " + start[slice(1)] +"='x' where id=:i;",{"i": y-i-1})
+            else:
+                if (szachownica[(y-2)*8+x].tekst == ""):
+                    db.execute("update szachownica set " + start[slice(1)] +"='x' where id=:i;",{"i": y-1})
+            if (szachownica[(y-2)*8+(x+1)].kolor == "c" and x < 7):
+                db.execute("update szachownica set " + chr(ord(start[slice(1)])+1) +"='" + ("x/" + szachownica[(y-2)*8+(x+1)].tekst) +"' where id=:i;",{"i": y-1})
+            if (szachownica[(y-2)*8+(x-1)].kolor == "c" and x > 0):
+                db.execute("update szachownica set " + chr(ord(start[slice(1)])-1) +"='" + ("x/" + szachownica[(y-2)*8+(x-1)].tekst) +"' where id=:i;",{"i": y-1})
         db.commit()
 
 class pustePole:
     def __init__(self):
         self.tekst = ""
+        self.kolor = ""
 
 czarny = "c"
 bialy = "b"
@@ -120,31 +139,22 @@ for j in range (4):
                 szachownica.append(pustePole())
 
 def main():
-
-
     for i in range(8):
         #if (i in (0,1,6,7)):
             db.execute("update szachownica set a=:a, b=:b, c=:c, d=:d, e=:e, f=:f, g=:g, h=:h where id=:i;",
             {"a": szachownica[8*i].tekst,"b": szachownica[8*i+1].tekst,"c": szachownica[8*i+2].tekst,"d": szachownica[8*i+3].tekst,
             "e": szachownica[8*i+4].tekst,"f": szachownica[8*i+5].tekst,"g": szachownica[8*i+6].tekst,"h": szachownica[8*i+7].tekst, "i": i+1})
-    """
-        else:
-            db.execute("update szachownica set a=:a, b=:b, c=:c, d=:d, e=:e, f=:f, g=:g, h=:h where id=:i;",
-            {"a": szachownica[8*i],"b": szachownica[8*i+1],"c": szachownica[8*i+2],"d": szachownica[8*i+3],
-            "e": szachownica[8*i+4],"f": szachownica[8*i+5],"g": szachownica[8*i+6],"h": szachownica[8*i+7], "i": i+1})
-    """
     print ("dodano")
     db.commit()
+
+    wybor()
+    wybor()
+    wybor()
+
+
+
 if __name__ == "__main__":
     main()
-for i in range(8):
-    cos = []
-    for j in range(8):
-        cos.append(szachownica[(i)*8+j].tekst)
-    print (cos)
-wybor()
-for i in range(8):
-    cos = []
-    for j in range(8):
-        cos.append(szachownica[(i)*8+j].tekst)
-    print (cos)
+
+
+
