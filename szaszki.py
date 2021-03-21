@@ -14,8 +14,8 @@ def wybor():
         x = (ord(start[slice(1)])-1)%8
         y = int(start[slice(1,2)])
         wspolrzedneStart = (y-1)*8+x
-        szachownica[wspolrzedneStart].ruch(x,y,start)
-        
+        szachownica[wspolrzedneStart].ruch(x,y,start) 
+
         print("Dokad chcesz ruszyc?")
         koniec = input()
         x = (ord(koniec[slice(1)])-1)%8
@@ -48,6 +48,26 @@ class wieza(bierka):
     def __init__ (self,kolor):
         super().__init__(typ="Wieza", kolor = kolor)
 
+    def ruch(self,x,y,start):
+        print (f"wybrales figure: {self.tekst}")
+        i=0
+        while (szachownica[(y+i)*8+x].tekst == "" and (y+1+i)<=8):
+            db.execute("update szachownica set " + start[slice(1)] +"='x' where id=:i;",{"i": y+i+1})
+            i += 1
+        i=0
+        while (szachownica[(y-2-i)*8+x].tekst == "" and (y-1-i)>=0):
+            db.execute("update szachownica set " + start[slice(1)] +"='x' where id=:i;",{"i": y-1-i})
+            i += 1
+        i=0
+        while (szachownica[(y-1)*8+x+1+i].tekst == "" and (x+1+i)<=7):
+            db.execute("update szachownica set " + chr(ord(start[slice(1)])+1+i) +"='x' where id=:i;",{"i": y})
+            i += 1
+        i=0
+        while (szachownica[(y-1)*8+x-1-i].tekst == "" and (x-1-i)>=0):
+            db.execute("update szachownica set " + chr(ord(start[slice(1)])-1-i) +"='x' where id=:i;",{"i": y})
+            i += 1
+
+        db.commit()
 
 class konik(bierka):
     def __init__ (self,kolor):
@@ -82,8 +102,7 @@ class pion(bierka):
         super().__init__(typ="Pion", kolor = kolor)
     
     def ruch(self,x,y,start):
-        print (self.tekst)
-        
+        print (f"wybrales figure: {self.tekst}")        
         if (self.kolor == "c"):
             if (y == 2):
                 for i in range (2):
@@ -147,6 +166,9 @@ def main():
     print ("dodano")
     db.commit()
 
+
+    db.execute("update szachownica set d='x' where id=4;")
+    db.commit()
     wybor()
     wybor()
     wybor()
@@ -155,6 +177,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
